@@ -12,6 +12,7 @@ Features:
 * Custom events to manipulate your page how you want
 * Event manager removes listeners automatically
 * Uses a global object to hold JavaScript values for each page, overwritten to release memory to garbage collection
+* Profuse documentation included using [JSDoc](https://jsdoc.app/)
 ---
 
 #### How it works
