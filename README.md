@@ -1,9 +1,10 @@
 # Vanilla SPA Framework
 #### Author : Chris Jackem
-#### Website : [chrisjackem.com]( http://www.chrisjackem.com )
 ##### This is a simple Single Page Application framework that uses vanilla JavaScript.
 ---
 Made in a few days to demonstrate my approach. A simple website is included to show off some features.
+
+![Alt text](/screenshot.png?raw=true "Included Website Template")
 
 Features:
 * Build .html pages as normal, the script and css tags are automatically injected into / removed from the main DOM
