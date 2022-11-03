@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: PageLoader.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: PageLoader.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import { AddEventListener, RemoveEventListeners } from "./EventMaster.js"
+
+/** ### Core of the framework. Only make one of these, before you load any pages
+ * 
+ */
+export class PageLoader{
+
+    /** Initialize everything we need for loading pages
+     * 1. Store reference to head we will add/remove styles to
+     * 2. Initialize window.VARS object that will hold page data ( We overwrite it every page )
+     * 3. Build ( Permanent ) links for anchors that exist at this point.
+     * 4. Add popstate listener for browser navigation actions
+     * @constructor
+     * */
+    constructor(){
+        this.head_tag = document.getElementsByTagName('head')[0]
+        window.VARS = { loaded_modules:[], loaded_styles:[] }        
+        this.BuildLinks( document, true )
+        AddEventListener( window, 'popstate',
+            e => this.GetPage( e.state.page_name ), true, true, true )                              
+    }
+
+    /** Load the page 
+     * 1. Uses the old-school XMLHttpRequest to perform a GET
+     * 2. PushState on the browser, storing the name and url only
+     * 3. Once we have a valid response, send string to {@link LoadPage}
+     * @param {string} name The name of the page we want to load
+     */
+    GetPage( name ){
+        console.log("GET PAGE")
+        let xhttp = new XMLHttpRequest()
+        let url = `${window.location.origin}/views/${name}.html`
+        xhttp.my_page_name = name
+        xhttp.open( 'GET', url )      
+        xhttp.send()
+        xhttp.onload = e => {       
+            if ( e.target.status !== 200 ){ return }
+            window.history.pushState( 
+                {'page_name': e.target.my_page_name}, 
+                'unused',
+                `${window.location.origin}${window.location.pathname}#${e.target.my_page_name}`
+            )            
+            this.LoadPage( xhttp.responseText )
+        }
+    }
+
+
+    /** Load the page into the container.
+     * 1. Remove all the things we set up in the last page
+     * 2. Create a temporary DOM that we will extract tags from
+     * 3. Process the tags and add them to this DOM
+     * @param {string} html The html string that was sent from {@link GetPage}
+     */
+    LoadPage( html ){
+        
+        // Housekeeping
+        RemoveEventListeners()
+        //this.my_event_master.RemoveEventListeners()
+        window.VARS.loaded_modules.forEach( mod => mod.destroy() )        
+        window.VARS.loaded_styles.forEach( style => style.remove() )
+        window.VARS = { loaded_modules:[], loaded_styles:[] }
+        
+        // Process new page
+        let DOM = new DOMParser(html).parseFromString( html, "text/html" )            
+        let head = DOM.getElementsByTagName('head')[0]
+        let body = DOM.getElementsByTagName('body')[0]
+
+        // Styles
+        window.VARS.loaded_styles = [...head.getElementsByTagName('link')]
+            .filter( tag => tag.rel=="stylesheet" )
+            window.VARS.loaded_styles.forEach( style => this.head_tag.appendChild( style ) )                
+        
+        // Modules
+        let modules = [...body.getElementsByTagName('script')]
+            .filter( tag => tag.type == 'module')
+            .forEach( mod => {
+               //require( mod.src )
+               import( mod.src )
+                .then( imported_module => {
+                    VARS['loaded_modules'].push( imported_module )
+                    imported_module.init()                    
+                })
+                .catch( error => console.log(`Error loading module : ${error}`))
+                mod.remove()
+            })
+
+        document.getElementById('content').innerHTML = body.innerHTML
+    }
+
+    /** Build all Links in the container. We need this because we are overriding the default
+     * link behavior. We will add click events that load the page we want.
+     * @param {Node} container The container we will look for links in
+     * @param {boolean} permanent If true, these links will be permanent
+     */
+    BuildLinks( container, permanent=false ){
+        for ( let anchor of container.getElementsByTagName('a') ){
+            if ( new URL(anchor.href).origin == window.location.origin ){
+                AddEventListener( anchor, 'click',
+                    event => this.LinkHandler(event, this), permanent, false )
+            }        
+        }
+    }
+
+
+    /** Intercept the default anchor click and load a page instead 
+     * @param {Event} click_event the event that triggered this function
+     * @param {PageLoader} _this a reference to this
+     */
+    LinkHandler( click_event, _this ){
+        click_event.preventDefault();
+        _this.GetPage( new URL( click_event.currentTarget ).pathname.replace('/', '') )
+    }
+
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-EventMaster.html">EventMaster</a></li></ul><h3>Classes</h3><ul><li><a href="PageLoader.html">PageLoader</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Sun Oct 23 2022 15:56:11 GMT-0400 (Eastern Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>

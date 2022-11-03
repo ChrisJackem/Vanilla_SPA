@@ -1,0 +1,58 @@
+
+*{
+    --home-color: #3d3d3d; 
+}
+
+.home-text{    
+    color: var(--home-color);
+}
+
+.home-title{
+    font-size: 24px;
+    padding: 6rem 3rem 1rem 3rem;
+    font-weight: bold;
+    background-image: url('../img/vanilla_ice_cream_wider.jpg');
+    background-repeat: no-repeat;
+    background-size: cover;    
+}
+
+.large{
+    font-size: 40px;
+}
+
+#home-blerb{
+    font-size: 22px;
+    text-align: center;
+    margin: 2rem 1rem;
+}
+
+#home-box1{
+    width: 100%;
+    display: flex;
+    flex-flow: row wrap;
+}
+#home-box1 div{
+    border: 2px solid var(--home-color);
+    flex: 1 1 0;   
+    text-align: center;
+    padding: 2rem;   
+    background-color: white;
+    margin: 2rem;
+    display: flex;
+    flex-direction: column;
+    justify-content:space-between;
+}
+#home-box1 img{
+    margin: 2rem 0;
+    align-self: center;
+    width: 30%;
+}
+#home-box1 p{
+    font-size: 20px;
+}
+
+/** Desktop **/
+@media only screen and (min-width:600px) {    
+    .large{ font-size: 56px; }
+    
+}

@@ -1,0 +1,176 @@
+*{
+    margin: 0;
+    padding: 0;
+    font-family: 'Archivo', "Arial";
+}
+
+h1, h2, h3, h4, h5, h6{
+    font-family: 'Archivo Black', 'Arial';
+}
+
+::-webkit-scrollbar { width: 10px; }  
+::-webkit-scrollbar-track { 
+    background: white; 
+    border-top: 0;
+    border-bottom: 0; 
+}
+::-webkit-scrollbar-thumb { background: #888; }
+::-webkit-scrollbar-thumb:hover { background: #555; }
+
+/****** Nav ********/
+a{
+    transition: color 0.5s, font-size 0.5s;
+    text-decoration: none;
+    color: #3d3d3d;
+    font-weight: bold;
+}
+#nav{
+    grid-area: nav;
+    background-color: #f5f5eb;
+    display: flex;
+    flex-direction: column;
+    align-items: center;    
+    padding: 0.75rem 2rem;
+    border-bottom: 2px solid #484848;
+    background: linear-gradient( rgb(255, 255, 255),rgb(196, 195, 195) );
+}
+#nav a{    
+    margin: 0.5rem 1rem;
+    font-family: 'Archivo Black';
+    font-size: 18px;
+}
+#nav a:hover{
+    color: black;
+}
+
+#nav .active{
+    font-size: 24px;
+    color: #575757;
+}
+
+
+/** brand ****/
+#brand{
+    display: flex;
+    align-items: center;  
+    font-family: 'Archivo Black', 'Arial'; 
+}
+#brand > img{
+    margin-right: 0.5rem;
+    float: left;
+    height: 60px;
+}
+
+body{ 
+    display: grid;   
+    background-color: #e3e3d3;
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: padding 1s ease;
+    
+    /* Mobile */
+    grid-template-rows: auto 1fr 90px;
+    grid-template-columns: 100%;
+    grid-template-areas:
+        "nav" 
+        "content" 
+        "footer";
+}
+
+#content{
+    margin: 3rem 0;    
+    transition: padding 1s;
+    grid-area: content; 
+    position: relative;
+    transition: height 1s;
+    width: 100%;
+}
+/** Use this for your containers ( if you want lol ) **/
+.inner-container{
+    padding: 1rem;
+}
+
+.bordered{
+    border: 2px solid black;
+    border-left: 0;
+    border-right: 0;
+}
+
+
+#footer{
+    grid-area: footer;
+    padding: 1rem;
+    background-color: #dedede;
+}
+
+button{
+    font-size: 20px;
+    padding: 0.5rem 1rem;
+    margin: 0.25rem;
+    border: 3px solid black;
+    border-radius: 0.25rem;
+    font-weight: 600;
+    background-color: #dedede;
+    transition: background-color 0.25s;
+    cursor: pointer;
+}
+button:hover{
+    background-color: #ffffff;
+}
+button:active{
+    border-color: #575757;
+    background-color: #575757;
+}
+
+
+.hidden{
+    display: none !important;
+}
+
+
+
+/****************** Cover *******************/
+#loading_cover{
+    position: fixed;
+    top: 0px;    
+    left: 0px;
+    z-index: 10000;
+    height: 100vh;
+    width: 100%;
+    background-image: linear-gradient(to left top,
+         rgba(100, 100, 100, 1) 0%, rgba(100, 100, 100, 0) 20% );
+}
+/** HourGlass **/
+@keyframes hourglass {
+    0%   {transform: rotate(0deg);}    
+    50%  {transform: rotate(180deg);}    
+    100% {transform: rotate(360deg);}
+}
+#loading_cover > img{
+    position: absolute;
+    bottom: 50px;
+    right: 50px;
+    width: 6rem;
+    height: 6rem;
+    animation-name: hourglass;
+    animation-duration: 3s;
+    animation-iteration-count: infinite;
+}
+
+/* Desktop */
+@media only screen and (min-width:600px) {
+    #brand{ margin-right: auto; }
+    #nav{ flex-direction: row; }
+    #nav a{ width: auto; }
+    body{         
+        grid-template-rows: auto 1fr auto;
+        grid-template-columns: 10% 80% 10%;
+        grid-template-areas:
+            "nav nav nav" 
+            ". content ."
+            "footer footer footer";
+    }
+    .bordered{      
+        border: 2px solid black;
+    }
+}

@@ -1,0 +1,31 @@
+/*
+    Page Transition styles only **
+    the container should have position: relative
+*/
+
+.out, .in{
+    position: absolute !important;
+    top: 0px !important;
+    left: 0px !important;
+    width: 100% !important;
+    z-index: 1;
+}
+
+/*
+    If you want to change the animations,
+    You can just change these. 
+    The code just adds/removes the classes 
+*/
+@keyframes fade-in {
+    from {opacity: 0;}
+    to {opacity: 1;}
+}
+@keyframes fade-out {
+    from {opacity: 1;}
+    to {opacity: 0;}
+}
+.in{ animation-name: fade-in; }
+.out{ animation-name: fade-out; }
+
+.fast{ animation-duration: 0.25s; }
+.slow{ animation-duration: 1s; }

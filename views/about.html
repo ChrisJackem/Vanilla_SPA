@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About</title>
+    <link rel="stylesheet" href="../css/about.css">
+</head>
+<body>
+    <div id="about-box" class="bordered">
+        <h1 id="about-title">About</h1>
+    </div>
+    <br/>
+    
+    <div id="about-main" class="inner-container">
+        <h3>About the Site</h3>
+        <p>This is a simple site meant to show off the functionality of the <strong>Vanilla SPA framework ©</strong>. I encourage you to take a look and change it to fit your needs.</p>
+        <br/>
+        <h3>About the Framework</h3>
+        <p>A <strong>Single Page Application</strong> is just a single web page that loads other pages into it. You can achieve some cool effects and speed up production ( After initial development ) using this method. There are alot of sites that utilize this method who I will not mention here.</p>
+        <p>This framework includes some pre-built modules you can use to get started. They are simple scripts to illustrate how you should build your views and maybe use some if they are useful to you.</p>
+        <br/>
+        <p>The framework uses vanilla JavaScript( ES2022 ), standard CSS, and HTML.</p>
+        <br/>
+        <p><strong>Vanilla SPA framework ©</strong> uses a global object to store data that is wiped every page load. You can store anything you can store inside an object - Functions, Other Objects, variables etc. Below is a quick and dirty rundown on how it works.</p>
+        <br/>
+        
+        <h3>Folder Structure</h3>
+        <p> The folder structure is as follows:</p>
+        <div id='folder-exp'>
+            <p class="folders">
+                root<br/>
+                ├  main.html<br/>
+                ├  /views<br/>
+                ├  /css<br/>
+                ├  /img<br/>
+                └  /js<br/>
+                &nbsp&nbsp&nbsp├ /framework<br/>
+                &nbsp&nbsp&nbsp├ /modules<br/>
+                &nbsp&nbsp&nbsp└ app.js<br/>
+            </p>
+            <br/>
+            <p><h4>main.html</h4>The main page of the site. All content will be loaded into the "#content" element.</p><br/>
+            <p><h4>/views</h4>This is where you would store the .html files with .css / module tags set like normal.</p><br/>
+            <p><h4>/css</h4>This is where you would store the .css files for your views.</p><br/>
+            <p><h4>/img</h4>This is where you would store the image files for your views.</p><br/>
+            <p><h4>/js</h4>The main directory for your scripts.</p><br/>
+            <p><h4>/framework</h4>This is where the framework modules live, do not mess with these unless you are customizing.</p><br/>
+            <p><h4>/modules</h4>This is where you would store all your individual modules for views.</p><br/>
+            <p><h4>app.js</h4>The main entry point of the app. You can use this as a psudo-config file as there are some properties you can set here as needed. ( More info inside the actual file, or the docs )</p><br/>
+        </div>
+        
+        
+        <h3>HTML Views (.html files)</h3>
+        <p>These are your standard HTML files you would see anywhere. You would add your style tags and module tags normally, the framework will extract these and inject them into the main page, and unload them when appropriate.</p>
+        <p>* The body is what is injected into the page ( into the #content div )</p>
+        <br/>
+
+        <h3>Modules</h3>
+        <p>In every view module you can have an init( ) and a destroy( ) that you can use to set up / clean up your scripts respectively. If you use the "EventMaster.js" module included, you don't need to remove any event listeners that you didn't explicitly set to permanent.</p>
+        <p>You can have none, 5 or 1 million bazillion of these if you want, they will all be handled behind the scenes. Because there is no way to unload a script from memory, it would be wise to go easy, although they will only run on the page they live in.</p>
+        <br/>
+        <p>* Make sure to export the functions here - ie:</p>
+        <p class="code">export function init(){ <br/>&nbsp&nbspVARS['awesome'] = true; <br/>} </p><br/>
+        <p class="code">export function destroy(){ <br/>&nbsp&nbspconsole.log(`I am ${ VARS.awesome ? 'still' : 'not' } awesome, and about to be destroyed.`); <br/>}</p>
+        <br/>
+        <p>You can use global variables here if you want, but there is a recommended way of setting variables so the memory gets released by GC every page:</p>
+        <p><strong>Use the global object "VARS" to store data.</strong> This is a global object that gets overwritten every page load.</p>
+        <br/>
+        <p>Example:</p>
+        <p class="code">VARS['variable_name'] = 5</p>
+        <p>Then you can access it later:</p>
+        <p class="code">console.log( VARS['variable_name'] ); <br/>/** OR **/ <br/>console.log( VARS.variable_name ); <br/>// etc<br/>VARS.variable_name += 48; </p>
+        <p>I like this way personally ( besides having to use strings ) because you can quickly see where we are declaring variables vs. where we are accessing them.
+            Like I said already, you can store almost anything you want in VARS ( Functions, variables, other Objects, etc. anything that can be a property of an Object )</p>
+        <br/>
+        
+        <h3>CSS Files</h3>
+        <p>These are your standard, <strong>VANILLA</strong> .css files. The only thing I would note is to be careful what you name your classes/Ids as there will be situations where any .css file will live with another .css file, and you could run into problems.</p>
+        <br/><p>I would reccomend you just use a prefix here. ex: </p><p class='code'>.name-of-file-title{<br/> }</p>
+        
+        <br/><br/>
+        <h3>Custom Events</h3>
+        <p>There are a few custom events you can listen for ( on document.body ):</p>
+        <br/>     
+        
+        <p><dfn>'page_unload'</dfn> - Fires when the old page is unloaded ( VARS.loaded_page_anchor is the old anchor ) </p>
+        <p><dfn>'page_load'</dfn> - Fires when the new page is loaded ( VARS.loaded_page_anchor is the new anchor )</p>
+        <p><dfn>'page_animated'</dfn> - Fires when the page is done animating</p>
+    
+        <br/><br/><p><strong>More information in the <a href='../jsdoc/index.html'>docs</a></strong></p>
+    </div>
+    
+
+    <script type="module" src="./js/modules/about.js"></script>
+</body>
+</html>

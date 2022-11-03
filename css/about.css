@@ -1,0 +1,39 @@
+
+
+#about-box{    
+    color: black;
+    padding: 6rem 3rem 1rem 3rem;   
+    background: 
+        linear-gradient(rgba(191, 191, 191, 0.9), rgba(100,100,100, 1)),
+        url('../img/cone_pattern.svg');
+}
+
+#about-box #about-title{
+    font-size: 56px;    
+}
+#about-main{
+    line-height: 1.25;
+}
+.folders{
+    margin: 1rem;
+    margin-left: 0;
+    padding: 1rem;    
+    color: white;
+    background-color: black;
+    font-family: 'Courier New', 'Courier', 'monospace';
+    float: left;
+}
+#folder-exp::after{
+    content: "";
+    clear: both;
+    display: table;
+}
+.code{
+    display: inline-block;
+    background-color: black;
+    color: white;
+    font-family: 'Courier New', 'Courier', 'monospace';
+    padding: 0.25rem 0.6rem;
+    margin: 0.25rem;
+    margin-left: 0;
+}

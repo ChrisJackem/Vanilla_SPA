@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JSDoc: Source: modules/PageLoader.js</title>
+
+    <script src="scripts/prettify/prettify.js"> </script>
+    <script src="scripts/prettify/lang-css.js"> </script>
+    <!--[if lt IE 9]>
+      <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+    <link type="text/css" rel="stylesheet" href="styles/prettify-tomorrow.css">
+    <link type="text/css" rel="stylesheet" href="styles/jsdoc-default.css">
+</head>
+
+<body>
+
+<div id="main">
+
+    <h1 class="page-title">Source: modules/PageLoader.js</h1>
+
+    
+
+
+
+    
+    <section>
+        <article>
+            <pre class="prettyprint source linenums"><code>import * as Events from "./EventMaster.js"
+
+/** 
+ * Loads pages
+ * @class
+ */
+export class PageLoader{   
+
+    /** 
+     * Initialize everything we need for loading pages
+     * @param {Object} [args] Optional props we can have
+     * @prop {string} [args.loading_cover_id] The id of a cover element that will be animated on loading ( this.Loading() )
+     * @prop {boolean} [args.debug] Show console.logs ( this.Log() )
+     * @constructor
+     * */
+    constructor(args={}){ 
+
+    // Optional properties
+        this.loading_cover = args.hasOwnProperty('loading_cover_id') ? 
+            document.getElementById( args.loading_cover_id ) : null
+        this.debug = args.hasOwnProperty('debug') ? args['debug'] : false        
+
+    // Loading vars
+        this.loading_page = false
+        this.load_queue = []
+        this.loaded_page_name = undefined
+        this.loaded_page_modules = []
+        this.loaded_page_div = undefined
+        this.loaded_page_styles = []
+        
+    // This is how views will store info ( hopefully lol )
+        window.VARS = {}
+
+    // Prepare the page
+        this.head_tag = document.getElementsByTagName('head')[0]
+        this.BuildLinks( document, true )
+
+        // Set popstate listener for browser history. 
+        // No push state on popstate, set to 'home' if no state
+        Events.AddEventListener( window, 'popstate', e => {                    
+            let page_name = e.state ? e.state.page_name : 'home'                    
+            this.GetPage( page_name , false )
+        }, true, true, true ) 
+
+        this.Loading( true )
+    }
+
+
+    /** 
+     * This is just a wrapper for console.log(). Set this.debug
+     * @param {string} txt The text to log
+     */
+    Log( txt ){ if ( this.debug ){ console.log( txt ) }}
+
+
+    /** Show a loading graphic 
+     * when is_loading == true if this.loading_cover is set
+     * @param {boolean} is_loading Are we loading right now ?
+     */
+    Loading( is_loading ){
+        if ( this.loading_cover ){
+            let is_visible = getComputedStyle(this.loading_cover).display != 'none'
+            // Show
+            if ( !is_visible &amp;&amp; is_loading ){
+                this.loading_cover.style.display = 'block'
+                Events.AnimatePromise( this.loading_cover, 'in fast' )
+            // Hide
+            }else if( is_visible &amp;&amp; !is_loading ){
+                Events.AnimatePromise( this.loading_cover, 'out fast' )
+                    .then( cover =>  cover.style.display = 'none' )
+            }
+        }
+    }
+
+    /** 
+     * GET the page 
+     * 1. Uses the old-school XMLHttpRequest to perform a GET
+     * 2. PushState on the browser, storing the name and url only
+     * 3. Send response {xhttp.responseText} to {@link LoadPage}
+     * @param {string} name The name of the page we want to load
+     * @param {boolean} [push_state] Browser popstate event ? we don't pushState()
+     */
+    GetPage( name, push_state=true ){        
+        // Don't load same page again
+        if (   this.loaded_page_name == name ){ return 
+        }else{ this.loaded_page_name =  name }
+        
+        // The request is built / sent here
+        // some props set on the xhttp object because its easy, man
+        let xhttp = new XMLHttpRequest()
+        let url = `${window.location.origin}/views/${name}.html`
+        xhttp.my_page_name = name
+        xhttp.push_state = push_state
+        xhttp.open( 'GET', url )      
+        xhttp.send()
+
+        // Handle response
+        xhttp.onload = e => {       
+            if ( e.target.status !== 200 ){ return }
+
+            // If this was triggered with a link (not popstate - ie browser), pushState
+            if ( e.target.push_state ){
+                window.history.pushState( 
+                    {'page_name': e.target.my_page_name}, 
+                    'unused',
+                    `${window.location.origin}${window.location.pathname}#${e.target.my_page_name}`
+                )
+            }
+            // Pass response to LoadPage()
+            this.LoadPage( xhttp.responseText, xhttp.my_page_name )
+        }
+        
+    }
+
+    /** 
+     * Load the page into the container.
+     * 1. Remove all the things we set up in the last page
+     * 2. Create a temporary DOM that we will extract tags from
+     * 3. Process the tags and add them to this DOM
+     * @param {string} html The html string that was sent from {@link GetPage}
+     * @param {string} name The name of the view ie - home.html --> home
+     */
+    async LoadPage( html, name ){
+        this.Loading( true )
+    
+    // This is to handle multiple requests jackhammering us ( back / forward buttons )
+    // Handle queue at the end
+        this.load_queue.push({ name: name, html: html })
+        if ( this.loading_page ){ return }
+        this.loading_page = true
+    
+    // Clean up loaded modules
+        Events.RemoveEventListeners()
+        this.loaded_page_modules.forEach( mod => mod.destroy() )
+        window.VARS = {}
+               
+    // Process new page ( save to local vars for now )
+        let DOM = new DOMParser(html).parseFromString( html, "text/html" )            
+        let head = DOM.getElementsByTagName('head')[0]
+        let body = DOM.getElementsByTagName('body')[0]
+        
+        document.title = DOM.title
+
+        // Styles
+        let page_styles_new = [...head.getElementsByTagName('link')]
+            .filter( tag => tag.rel=="stylesheet" )
+        
+        // Modules
+        let modules_new = [...body.getElementsByTagName('script')]
+            .filter( tag => tag.type == 'module')        
+
+    // Load new page
+
+        // Promise arrays
+        let loading = { modules: [], styles: [] } 
+        
+        // Modules
+        loading.modules = modules_new.map( mod => {
+            mod.remove()
+            return import( mod.src )
+        })         
+            Promise.all( loading.modules )
+                .then( modules =>{  
+                    this.loaded_page_modules = modules
+                    this.Log(modules)           
+                })
+                .catch( err => this.Log(`Error loading modules : ${err}`))
+
+        // Styles
+        page_styles_new.forEach( style =>{
+            this.head_tag.appendChild( style )
+            loading.styles.push( Events.ListenerPromise( style, 'load' ))
+        })
+            Promise.all( loading.styles )
+                .then( styles => { this.Log(styles) })
+                .catch( err =>{ this.Log(`Error Loading Styles: ${err}`) })
+
+    // Wait here for load
+        await Promise.all( [...loading.modules, ...loading.styles])
+            .then( r => this.Log("Loading Done."))       
+    
+    // Animate divs
+        let animation_promises = []
+
+        // Animate the old one out if we have another one there already
+        if ( this.loaded_page_div ){
+            animation_promises.push (
+                Events.AnimatePromise( this.loaded_page_div, 'out slow' )
+                    .then( old_div => { 
+                        old_div.remove() 
+                    })
+            )     
+        }
+
+        // Create a new div, add to dom
+        let new_div = document.createElement('div')            
+            new_div.setAttribute("id", name);
+            new_div.innerHTML = body.innerHTML
+            document.getElementById('content').append( new_div )
+
+        animation_promises.push( Events.AnimatePromise( new_div, 'in slow' ) )
+        
+    // Clean up / save props
+        await Promise.all( animation_promises )
+            .then( r => {                
+                this.loaded_page_div = new_div
+                this.loaded_page_styles.forEach( style => style.remove() )
+                this.loaded_page_styles = page_styles_new                
+                
+                // Set the global obj props and THEN init modules
+                // So the fresh globals are accessable to each module 
+                window.VARS = {
+                    loaded_page: name, 
+                    loaded_modules: this.loaded_page_modules, 
+                    loaded_styles: page_styles_new
+                }
+                this.loaded_page_modules.forEach( mod => mod.init() )
+                this.loading_page = false                
+
+            // Handle queue
+                this.load_queue.shift()
+                if ( this.load_queue.length ){
+                    let last = this.load_queue.at(-1)
+                    this.load_queue = []
+                    this.LoadPage( last.html, last.name )
+                }else{
+                    this.Loading( false )
+                }          
+            })
+            .catch( err => this.Log(`Error animating divs : ${err}`))
+    }
+
+    /** 
+     * Build all Links in the container. We need this because we are overriding the default
+     * link behavior. Add click events that load the page we want ( with {@link LinkHandler} )
+     * @param {Node} container The container we will look for links in
+     * @param {boolean} [permanent] If true, these links will be permanent
+     */
+    BuildLinks( container, permanent=false ){
+        for ( let anchor of container.getElementsByTagName('a') ){
+            let url = new URL(anchor.href)
+            if ( url.hash &amp;&amp; url.hash[0] == '#' ){
+                this.Log(`Building link: ${url.hash}` )
+                Events.AddEventListener( anchor, 'click',
+                    event => this.LinkHandler(event, this), permanent, false )
+            }        
+        }
+    }
+
+    /** 
+     * Callback for the default anchor click set by {@link BuildLinks}. Load a page instead 
+     * @param {Event} click_event the event that triggered this function
+     * @param {PageLoader} _this a reference to this
+     */
+    LinkHandler( click_event, _this ){
+        click_event.preventDefault();
+        let hash = new URL(click_event.currentTarget.href).hash.replace('#', '')
+        _this.GetPage( hash )
+    }
+
+}</code></pre>
+        </article>
+    </section>
+
+
+
+
+</div>
+
+<nav>
+    <h2><a href="index.html">Home</a></h2><h3>Modules</h3><ul><li><a href="module-app.html">app</a></li><li><a href="module-EventMaster.html">EventMaster</a></li></ul><h3>Classes</h3><ul><li><a href="PageLoader.html">PageLoader</a></li></ul>
+</nav>
+
+<br class="clear">
+
+<footer>
+    Documentation generated by <a href="https://github.com/jsdoc/jsdoc">JSDoc 3.6.11</a> on Tue Oct 25 2022 17:47:47 GMT-0400 (Eastern Daylight Time)
+</footer>
+
+<script> prettyPrint(); </script>
+<script src="scripts/linenumber.js"> </script>
+</body>
+</html>
